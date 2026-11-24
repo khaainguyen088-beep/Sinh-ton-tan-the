@@ -1,0 +1,2624 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PROJECT LAST DAY - v0.3 Graphics & Interaction Update</title>
+<style>
+  :root {
+    --bg-dark: #161822;
+    --panel-bg: #222636;
+    --panel-border: #363c54;
+    --accent: #f59e0b;
+    --accent-hover: #d97706;
+    --green: #10b981;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* START SCREEN */
+  #start-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1a1c29 0%, #2d3246 50%, #181a24 100%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .game-logo {
+    font-size: clamp(2rem, 6vw, 3.8rem);
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #fbbf24;
+    text-shadow: 0 4px 20px rgba(245, 158, 11, 0.4), 2px 2px 0px #78350f;
+    margin-bottom: 6px;
+  }
+
+  .game-version {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid #f59e0b;
+    color: #fde68a;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  .start-desc {
+    max-width: 520px;
+    color: #d1d5db;
+    line-height: 1.5;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+  }
+
+  .start-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #111827;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn:active { transform: scale(0.96); }
+  .btn:hover { background: var(--accent-hover); }
+  .btn-secondary { background: #374151; color: #f9fafb; }
+  .btn-secondary:hover { background: #4b5563; }
+  .btn-green { background: var(--green); color: #064e3b; }
+  .btn-green:hover { background: #059669; color: #fff; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-blue { background: var(--blue); color: #fff; }
+  .btn-sm { padding: 7px 12px; font-size: 0.85rem; border-radius: 8px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  /* TOP BAR */
+  header {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .status-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    background: #161822;
+    border: 1px solid var(--panel-border);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .ap-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .ap-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4b5563;
+  }
+  .ap-dot.active {
+    background: #fbbf24;
+    box-shadow: 0 0 6px #fbbf24;
+  }
+
+  .resources-bar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+  }
+
+  .res-item {
+    background: #181b26;
+    border: 1px solid #2d3246;
+    border-radius: 7px;
+    padding: 4px 6px;
+    text-align: center;
+    font-size: 0.78rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .res-val { font-weight: 800; font-size: 0.9rem; color: #fff; }
+  .res-lbl { color: var(--text-muted); font-size: 0.68rem; }
+
+  /* MAIN CANVAS AREA */
+  #canvas-container {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+    background: #87ceeb;
+    min-height: 240px;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* CANVAS FLOATING HUD */
+  .loc-banner {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    background: rgba(22, 24, 34, 0.82);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 6px 12px;
+    border-radius: 10px;
+    pointer-events: none;
+  }
+  .loc-title { font-weight: 700; font-size: 0.95rem; color: #fbbf24; }
+  .loc-sub { font-size: 0.75rem; color: #d1d5db; }
+
+  .quick-actions {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ON-SCREEN CONTROLS FOR MOBILE & DESKTOP */
+  .controls-overlay {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+
+  .dpad {
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+  }
+
+  .ctrl-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(22, 24, 34, 0.82);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .ctrl-btn:active {
+    background: var(--accent);
+    color: #111;
+    transform: scale(0.92);
+  }
+
+  .interact-prompt {
+    pointer-events: auto;
+    background: rgba(245, 158, 11, 0.95);
+    color: #111827;
+    font-weight: 800;
+    padding: 10px 18px;
+    border-radius: 25px;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    cursor: pointer;
+    font-size: 0.9rem;
+    animation: pulse 1.5s infinite;
+    display: none;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  /* FADE TRANSITION */
+  #fade-overlay {
+    position: absolute;
+    inset: 0;
+    background: #0f111a;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fbbf24;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+
+  /* BOTTOM PANEL (TABS) */
+  #bottom-panel {
+    height: 36vh;
+    min-height: 215px;
+    max-height: 320px;
+    background: var(--panel-bg);
+    border-top: 2px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tab-nav {
+    display: flex;
+    background: #181b26;
+    border-bottom: 1px solid var(--panel-border);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 72px;
+    padding: 9px 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+
+  .tab-btn.active {
+    color: #fbbf24;
+    border-bottom-color: #fbbf24;
+    background: rgba(245, 158, 11, 0.08);
+  }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px;
+  }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* CHARACTER CARDS */
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px;
+  }
+
+  .char-card {
+    background: #181b26;
+    border: 1px solid #2e344b;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .char-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .char-name { font-weight: 700; font-size: 0.95rem; }
+  .char-role { font-size: 0.75rem; color: #fbbf24; background: rgba(245,158,11,0.15); padding: 2px 7px; border-radius: 6px; }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+  .bar-wrap {
+    flex: 1;
+    height: 7px;
+    background: #2d3246;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; transition: width 0.3s; }
+
+  /* MAP LIST */
+  .map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+  }
+  .map-card {
+    background: #181b26;
+    border: 1px solid #2e344b;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .map-card.current { border-color: #10b981; background: rgba(16,185,129,0.08); }
+
+  /* LOGS */
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.83rem;
+  }
+  .log-entry {
+    background: #181b26;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #6b7280;
+    line-height: 1.4;
+  }
+  .log-entry.good { border-left-color: #10b981; }
+  .log-entry.warn { border-left-color: #f59e0b; }
+  .log-entry.bad { border-left-color: #ef4444; }
+
+  /* MODAL SYSTEM */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 18, 0.8);
+    backdrop-filter: blur(3px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal-box {
+    background: #222636;
+    border: 2px solid #434a66;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    animation: popIn 0.2s ease-out;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-header {
+    background: #181b26;
+    padding: 12px 16px;
+    border-bottom: 1px solid #363c54;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title { font-weight: 800; font-size: 1.05rem; color: #fbbf24; }
+  .modal-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .dialogue-bubble {
+    background: #181b26;
+    border: 1px solid #363c54;
+    padding: 12px;
+    border-radius: 10px;
+    position: relative;
+    color: #f3f4f6;
+  }
+
+  .choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .choice-btn {
+    background: #2c3146;
+    border: 1px solid #454d6b;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: background 0.15s;
+  }
+  .choice-btn:hover { background: #3b425e; border-color: #fbbf24; }
+
+  .building-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .building-item {
+    background: #181b26;
+    border: 1px solid #363c54;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111827;
+    border: 1px solid #fbbf24;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="start-screen">
+  <div class="game-logo">PROJECT LAST DAY</div>
+  <div class="game-version">Phiên bản 0.3 – GRAPHICS & INTERACTION UPDATE</div>
+  <p class="start-desc">
+    Thế giới sau biến cố trở nên hoang tàn nhưng mầm sống vẫn nảy nở. Hãy cùng <b>An</b>, <b>Linh</b> và <b>Minh</b> xây dựng căn cứ Bình Minh, khám phá tàn tích, thu thập tài nguyên và giữ vững hy vọng sinh tồn qua từng ngày.
+  </p>
+  <div class="start-btns">
+    <button class="btn" id="btn-new-game" onclick="startNewGame()">▶ Bắt đầu hành trình mới</button>
+    <button class="btn btn-green" id="btn-continue-game" onclick="continueGame()" style="display:none;">↻ Tiếp tục chơi (Đã lưu)</button>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast">Thông báo</div>
+
+<!-- TOP STATUS & RESOURCES -->
+<header>
+  <div class="top-row">
+    <div class="status-badges">
+      <div class="badge">📅 Ngày <span id="ui-day">1</span></div>
+      <div class="badge" id="ui-weather">☀️ Nắng nhẹ</div>
+      <div class="badge">⚡ Lượt: <span id="ui-ap-text">3/3</span>
+        <span class="ap-dots" id="ui-ap-dots">
+          <span class="ap-dot active"></span>
+          <span class="ap-dot active"></span>
+          <span class="ap-dot active"></span>
+        </span>
+      </div>
+    </div>
+    <div style="display:flex; gap:5px;">
+      <button class="btn btn-sm btn-green" onclick="endDay()">🌙 Qua ngày</button>
+      <button class="btn btn-sm btn-secondary" onclick="manualSave()">💾 Lưu</button>
+      <button class="btn btn-sm btn-secondary" onclick="openSystemMenu()">⚙️</button>
+    </div>
+  </div>
+  <div class="resources-bar">
+    <div class="res-item"><span class="res-val" id="res-food">12</span><span class="res-lbl">🥫 Thực phẩm</span></div>
+    <div class="res-item"><span class="res-val" id="res-water">12</span><span class="res-lbl">💧 Nước uống</span></div>
+    <div class="res-item"><span class="res-val" id="res-meds">3</span><span class="res-lbl">💊 Thuốc</span></div>
+    <div class="res-item"><span class="res-val" id="res-wood">10</span><span class="res-lbl">🪵 Gỗ</span></div>
+    <div class="res-item"><span class="res-val" id="res-seeds">4</span><span class="res-lbl">🌱 Hạt giống</span></div>
+    <div class="res-item"><span class="res-val" id="res-mats">8</span><span class="res-lbl">🧱 Vật liệu</span></div>
+  </div>
+</header>
+
+<!-- 2D GAME WORLD CANVAS -->
+<div id="canvas-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="loc-banner">
+    <div class="loc-title" id="ui-loc-name">🏡 Căn cứ Bình Minh</div>
+    <div class="loc-sub" id="ui-loc-desc">Chạm vào nhân vật, công trình hoặc vật phẩm để tương tác</div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="btn btn-sm" onclick="switchTab('map')">🗺️ Bản đồ</button>
+  </div>
+
+  <div class="controls-overlay">
+    <div class="dpad">
+      <button class="ctrl-btn" id="btn-left" aria-label="Đi trái">◀</button>
+      <button class="ctrl-btn" id="btn-right" aria-label="Đi phải">▶</button>
+    </div>
+    <button class="interact-prompt" id="btn-interact" onclick="triggerNearestInteraction()">👆 Tương tác</button>
+  </div>
+
+  <div id="fade-overlay">Đang di chuyển...</div>
+</div>
+
+<!-- BOTTOM MANAGEMENT PANEL -->
+<div id="bottom-panel">
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="chars" onclick="switchTab('chars')">👥 Thành viên</button>
+    <button class="tab-btn" data-tab="map" onclick="switchTab('map')">🗺️ Địa điểm</button>
+    <button class="tab-btn" data-tab="quests" onclick="switchTab('quests')">📋 Nhiệm vụ</button>
+    <button class="tab-btn" data-tab="bag" onclick="switchTab('bag')">🎒 Kho đồ</button>
+    <button class="tab-btn" data-tab="log" onclick="switchTab('log')">📖 Nhật ký</button>
+  </div>
+
+  <div class="tab-content">
+    <!-- TAB: CHARACTERS -->
+    <div class="tab-pane active" id="tab-chars">
+      <div class="char-grid" id="char-list"></div>
+    </div>
+
+    <!-- TAB: MAP -->
+    <div class="tab-pane" id="tab-map">
+      <div class="map-grid" id="map-list"></div>
+    </div>
+
+    <!-- TAB: QUESTS -->
+    <div class="tab-pane" id="tab-quests">
+      <div id="quest-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <!-- TAB: INVENTORY -->
+    <div class="tab-pane" id="tab-bag">
+      <div id="bag-list" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:8px;"></div>
+    </div>
+
+    <!-- TAB: LOG -->
+    <div class="tab-pane" id="tab-log">
+      <div class="log-list" id="log-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- UNIVERSAL INTERACTION MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Tiêu đề</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   1. GAME STATE & CONFIGURATION
+   ========================================================================== */
+const SAVE_KEY = 'PROJECT_LAST_DAY_V03_SAVE';
+
+const DEFAULT_STATE = {
+  day: 1,
+  ap: 3,
+  maxAp: 3,
+  weather: 'sunny', // sunny, cloudy, rain
+  currentLocation: 'base',
+  playerX: 280,
+  playerDir: 1, // 1 right, -1 left
+  resources: {
+    food: 12,
+    water: 12,
+    meds: 3,
+    wood: 10,
+    seeds: 4,
+    mats: 8
+  },
+  inventory: [
+    { id: 'canned_beans', name: 'Đậu hộp dự trữ', icon: '🥫', qty: 2, desc: 'Dùng ngay để tăng +4 Thực phẩm.' },
+    { id: 'clean_bottle', name: 'Bình nước lọc', icon: '🧴', qty: 2, desc: 'Dùng ngay để tăng +4 Nước uống.' },
+    { id: 'bandage', name: 'Băng gạc y tế', icon: '🩹', qty: 1, desc: 'Hồi +25 Sức khỏe cho một thành viên.' }
+  ],
+  buildings: {
+    mainHouse: { name: 'Nhà chính', level: 1, desc: 'Nơi họp bàn chiến lược và giữ vững tinh thần cả nhóm.' },
+    warehouse: { name: 'Nhà kho', level: 1, desc: 'Bảo quản tài nguyên, tăng sản lượng thu thập.' },
+    garden: { name: 'Vườn rau', level: 1, state: 'empty', growDays: 0, desc: 'Trồng hạt giống để thu hoạch thực phẩm sạch.' },
+    restArea: { name: 'Khu nghỉ ngơi', level: 1, desc: 'Giúp thành viên hồi phục sức khỏe và tâm trạng.' },
+    workshop: { name: 'Khu chế tạo', level: 1, desc: 'Chế tạo vật tư, lọc nước và sửa chữa công cụ.' }
+  },
+  characters: {
+    an: {
+      id: 'an',
+      name: 'An',
+      role: 'Trưởng nhóm',
+      personality: 'Thông minh, điềm tĩnh, có trách nhiệm',
+      hp: 90,
+      mood: 85,
+      rel: 65,
+      x: 190,
+      dir: 1,
+      assigned: 'none',
+      talkedToday: false,
+      questDone: false,
+      questTitle: 'Củng cố Nhà chính',
+      questDesc: 'Nâng cấp Nhà chính lên Cấp 2 để ổn định chỗ ở cho cả nhóm.',
+      colors: { hair: '#2c221e', shirt: '#3b82f6', pants: '#1e293b', skin: '#fdd5b1' }
+    },
+    linh: {
+      id: 'linh',
+      name: 'Linh',
+      role: 'Trồng trọt',
+      personality: 'Hòa đồng, lạc quan, yêu thiên nhiên',
+      hp: 85,
+      mood: 90,
+      rel: 70,
+      x: 520,
+      dir: -1,
+      assigned: 'none',
+      talkedToday: false,
+      questDone: false,
+      questTitle: 'Mùa vụ đầu tiên',
+      questDesc: 'Gieo hạt giống tại Vườn rau hoặc thu hoạch rau củ tươi.',
+      colors: { hair: '#5c3a21', shirt: '#10b981', pants: '#374151', skin: '#ffe0bd' }
+    },
+    minh: {
+      id: 'minh',
+      name: 'Minh',
+      role: 'Sửa chữa',
+      personality: 'Thực tế, khéo tay, hơi cộc cằn nhưng tốt bụng',
+      hp: 95,
+      mood: 75,
+      rel: 60,
+      x: 780,
+      dir: -1,
+      assigned: 'none',
+      talkedToday: false,
+      questDone: false,
+      questTitle: 'Gia cố xưởng chế tạo',
+      questDesc: 'Nâng cấp Khu chế tạo lên Cấp 2 để tự chủ vật liệu.',
+      colors: { hair: '#1f2937', shirt: '#f59e0b', pants: '#27272a', skin: '#f1c27d' }
+    }
+  },
+  locations: {
+    base: {
+      id: 'base',
+      name: 'Căn cứ Bình Minh',
+      unlocked: true,
+      desc: 'Ngôi nhà chung an toàn giữa vùng đất hoang tàn.',
+      theme: 'base',
+      lootedToday: false
+    },
+    store: {
+      id: 'store',
+      name: 'Cửa hàng tiện lợi',
+      unlocked: true,
+      desc: 'Siêu thị mini phủ đầy dây leo, vẫn còn sót lại đồ hộp và nước.',
+      theme: 'store',
+      lootedToday: false
+    },
+    residential: {
+      id: 'residential',
+      name: 'Khu dân cư',
+      unlocked: true,
+      desc: 'Những ngôi nhà bỏ hoang yên bình, nhiều gỗ và vật liệu.',
+      theme: 'residential',
+      lootedToday: false
+    },
+    park: {
+      id: 'park',
+      name: 'Công viên cũ',
+      unlocked: true,
+      desc: 'Rừng cây mọc um tùm quanh đài phun nước vỡ, nhiều hạt giống.',
+      theme: 'park',
+      lootedToday: false
+    },
+    clinic: {
+      id: 'clinic',
+      name: 'Trạm y tế',
+      unlocked: true,
+      desc: 'Phòng khám nhỏ phủ bụi, nơi quý giá để tìm thuốc men.',
+      theme: 'clinic',
+      lootedToday: false
+    },
+    greenhouse: {
+      id: 'greenhouse',
+      name: 'Nhà kính bỏ hoang',
+      unlocked: false,
+      desc: 'Địa điểm bí mật phát hiện qua sự kiện, dồi dào hạt giống & nước.',
+      theme: 'park',
+      lootedToday: false
+    }
+  },
+  worldLoot: [],
+  logs: [
+    { day: 1, text: 'Ngày đầu tiên tại Căn cứ Bình Minh. Mọi người đều quyết tâm sống sót.', type: 'good' }
+  ]
+};
+
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let gameRunning = false;
+
+/* ==========================================================================
+   2. AUDIO SYNTHESIZER (LIGHTWEIGHT WEB AUDIO EFFECTS)
+   ========================================================================== */
+const AudioFX = {
+  ctx: null,
+  play(freq = 440, type = 'sine', dur = 0.08) {
+    try {
+      if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + dur);
+    } catch (e) {}
+  }
+};
+
+/* ==========================================================================
+   3. SAVE / LOAD SYSTEM
+   ========================================================================== */
+function checkSaveExists() {
+  const saved = localStorage.getItem(SAVE_KEY);
+  const btn = document.getElementById('btn-continue-game');
+  if (saved) {
+    btn.style.display = 'inline-flex';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function autoSave() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch (e) {}
+}
+
+function manualSave() {
+  autoSave();
+  AudioFX.play(620, 'triangle', 0.12);
+  showToast('💾 Đã lưu tiến trình game!');
+}
+
+function startNewGame() {
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  spawnLocationLoot('base');
+  autoSave();
+  document.getElementById('start-screen').style.display = 'none';
+  gameRunning = true;
+  AudioFX.play(520, 'sine', 0.15);
+  updateAllUI();
+}
+
+function continueGame() {
+  const saved = localStorage.getItem(SAVE_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      state = Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+      document.getElementById('start-screen').style.display = 'none';
+      gameRunning = true;
+      AudioFX.play(580, 'sine', 0.15);
+      updateAllUI();
+      showToast('Chào mừng trở lại, Ngày ' + state.day + '!');
+    } catch (e) {
+      startNewGame();
+    }
+  }
+}
+
+function resetGameConfirm() {
+  openModal('⚠️ Chơi lại từ đầu?', `
+    <p>Toàn bộ tiến trình hiện tại sẽ bị xóa và bắt đầu lại từ Ngày 1. Bạn chắc chắn chứ?</p>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-red btn-sm" onclick="localStorage.removeItem('${SAVE_KEY}'); closeModal(); startNewGame();">Chơi lại</button>
+    </div>
+  `);
+}
+
+/* ==========================================================================
+   4. WORLD LOOT & INTERACTABLE ENTITIES
+   ========================================================================== */
+function spawnLocationLoot(locId) {
+  state.worldLoot = [];
+  if (locId === 'base') {
+    state.worldLoot.push(
+      { id: 'loot_wood_1', x: 910, name: 'Đống củi khô', icon: '🪵', reward: { wood: 2 }, desc: 'Những thanh gỗ rơi quanh hàng rào căn cứ.' }
+    );
+  } else if (locId === 'store') {
+    state.worldLoot.push(
+      { id: 'st_1', x: 240, name: 'Kệ đồ hộp đổ', icon: '🥫', reward: { food: 3 }, desc: 'Vài lon thức ăn còn hạn sử dụng.' },
+      { id: 'st_2', x: 560, name: 'Thùng nước suối', icon: '💧', reward: { water: 3 }, desc: 'Nước đóng chai nằm dưới quầy thu ngân.' },
+      { id: 'st_3', x: 820, name: 'Hộp sơ cứu nhỏ', icon: '💊', reward: { meds: 1 }, desc: 'Túi y tế của nhân viên cửa hàng.' }
+    );
+  } else if (locId === 'residential') {
+    state.worldLoot.push(
+      { id: 'rs_1', x: 260, name: 'Tủ gỗ cũ', icon: '🪵', reward: { wood: 4 }, desc: 'Gỗ tốt có thể tháo dỡ để gia cố căn cứ.' },
+      { id: 'rs_2', x: 540, name: 'Đống gạch & sắt vụn', icon: '🧱', reward: { mats: 3 }, desc: 'Vật liệu xây dựng còn nguyên vẹn.' },
+      { id: 'rs_3', x: 800, name: 'Bếp gia đình', icon: '🥫', reward: { food: 2, water: 1 }, desc: 'Một ít lương khô trong ngăn tủ.' }
+    );
+  } else if (locId === 'park') {
+    state.worldLoot.push(
+      { id: 'pk_1', x: 230, name: 'Vườn ươm hoa cỏ', icon: '🌱', reward: { seeds: 3 }, desc: 'Hạt giống rau củ hoang dã rất khỏe.' },
+      { id: 'pk_2', x: 520, name: 'Cành cây gãy', icon: '🪵', reward: { wood: 3 }, desc: 'Gỗ tự nhiên khô ráo.' },
+      { id: 'pk_3', x: 790, name: 'Bể nước mưa', icon: '💧', reward: { water: 2 }, desc: 'Nước mưa đọng lại khá trong.' }
+    );
+  } else if (locId === 'clinic') {
+    state.worldLoot.push(
+      { id: 'cl_1', x: 270, name: 'Tủ thuốc kháng sinh', icon: '💊', reward: { meds: 2 }, desc: 'Thuốc men quý giá cho cả nhóm.' },
+      { id: 'cl_2', x: 580, name: 'Bình nước cất', icon: '💧', reward: { water: 3 }, desc: 'Nước sạch dùng trong y tế.' },
+      { id: 'cl_3', x: 830, name: 'Thùng vật tư', icon: '🧱', reward: { mats: 2 }, desc: 'Khay kim loại và dụng cụ chắc chắn.' }
+    );
+  } else if (locId === 'greenhouse') {
+    state.worldLoot.push(
+      { id: 'gh_1', x: 260, name: 'Luống rau tự nhiên', icon: '🥫', reward: { food: 4 }, desc: 'Rau củ mọc tự nhiên tươi tốt.' },
+      { id: 'gh_2', x: 550, name: 'Kho hạt giống', icon: '🌱', reward: { seeds: 4 }, desc: 'Rất nhiều gói hạt giống được bảo quản kỹ.' },
+      { id: 'gh_3', x: 810, name: 'Hệ thống tưới nhỏ giọt', icon: '💧', reward: { water: 3 }, desc: 'Bồn chứa nước sạch còn đầy.' }
+    );
+  }
+}
+
+/* ==========================================================================
+   5. CANVAS 2D GRAPHICS ENGINE (CUTE POST-APOCALYPTIC SIDE-VIEW)
+   ========================================================================== */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let animTime = 0;
+let clouds = [
+  { x: 100, y: 45, s: 0.9, speed: 12 },
+  { x: 420, y: 70, s: 1.15, speed: 8 },
+  { x: 780, y: 40, s: 0.8, speed: 15 },
+  { x: 1050, y: 65, s: 1.0, speed: 10 }
+];
+let raindrops = Array.from({ length: 65 }, () => ({
+  x: Math.random() * 1200,
+  y: Math.random() * 400,
+  l: 10 + Math.random() * 10,
+  v: 320 + Math.random() * 150
+}));
+
+let keys = { left: false, right: false };
+let nearestTarget = null;
+const WORLD_WIDTH = 1050;
+let cameraX = 0;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Keyboard controls
+window.addEventListener('keydown', (e) => {
+  if (document.getElementById('modal').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'e' || e.key === 'E') {
+    if (nearestTarget) triggerNearestInteraction();
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+});
+
+// Touch / Mouse D-Pad controls
+const btnLeft = document.getElementById('btn-left');
+const btnRight = document.getElementById('btn-right');
+
+['mousedown', 'touchstart'].forEach(evt => {
+  btnLeft.addEventListener(evt, (e) => { e.preventDefault(); keys.left = true; });
+  btnRight.addEventListener(evt, (e) => { e.preventDefault(); keys.right = true; });
+});
+['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => {
+  btnLeft.addEventListener(evt, () => { keys.left = false; });
+  btnRight.addEventListener(evt, () => { keys.right = false; });
+});
+
+// Canvas Click / Tap to Interact or Walk
+canvas.addEventListener('click', (e) => {
+  if (!gameRunning) return;
+  const rect = canvas.getBoundingClientRect();
+  const clickX = (e.clientX - rect.left) + cameraX;
+  const clickY = e.clientY - rect.top;
+
+  // Check if clicked on an entity directly
+  const interactables = getInteractablesAtCurrentLocation();
+  for (let item of interactables) {
+    if (Math.abs(clickX - item.x) < item.w / 2 + 15) {
+      // Walk near if far, or interact immediately if close
+      if (Math.abs(state.playerX - item.x) < 110) {
+        executeInteraction(item);
+      } else {
+        state.playerDir = item.x > state.playerX ? 1 : -1;
+        state.playerX = item.x - state.playerDir * 55;
+        AudioFX.play(380, 'sine', 0.06);
+        executeInteraction(item);
+      }
+      return;
+    }
+  }
+
+  // Otherwise move player towards clicked X
+  state.playerDir = clickX > state.playerX ? 1 : -1;
+  state.playerX = Math.max(50, Math.min(WORLD_WIDTH - 50, clickX));
+  AudioFX.play(300, 'sine', 0.05);
+});
+
+function getInteractablesAtCurrentLocation() {
+  const list = [];
+  if (state.currentLocation === 'base') {
+    list.push(
+      { type: 'building', id: 'mainHouse', x: 140, w: 120, label: '🏠 Nhà chính' },
+      { type: 'building', id: 'warehouse', x: 340, w: 100, label: '📦 Nhà kho' },
+      { type: 'building', id: 'garden', x: 520, w: 110, label: '🌱 Vườn rau' },
+      { type: 'building', id: 'restArea', x: 700, w: 105, label: '⛺ Khu nghỉ ngơi' },
+      { type: 'building', id: 'workshop', x: 870, w: 105, label: '🛠️ Khu chế tạo' }
+    );
+    Object.values(state.characters).forEach(c => {
+      list.push({ type: 'char', id: c.id, x: c.x, w: 50, label: `💬 ${c.name}` });
+    });
+  } else {
+    // Exit sign back to base
+    list.push({ type: 'exit', id: 'base', x: 80, w: 70, label: '⬅️ Về Căn cứ' });
+  }
+
+  state.worldLoot.forEach(loot => {
+    list.push({ type: 'loot', id: loot.id, data: loot, x: loot.x, w: 55, label: `${loot.icon} ${loot.name}` });
+  });
+
+  return list;
+}
+
+function triggerNearestInteraction() {
+  if (nearestTarget) {
+    executeInteraction(nearestTarget);
+  }
+}
+
+/* ==========================================================================
+   6. DRAWING HELPERS (SCENERY, BUILDINGS, CUTE CHARACTERS)
+   ========================================================================== */
+function drawSkyAndAtmosphere(w, h, groundY) {
+  let grad = ctx.createLinearGradient(0, 0, 0, groundY);
+  if (state.weather === 'rain') {
+    grad.addColorStop(0, '#475569');
+    grad.addColorStop(1, '#94a3b8');
+  } else if (state.weather === 'cloudy') {
+    grad.addColorStop(0, '#64748b');
+    grad.addColorStop(1, '#cbd5e1');
+  } else {
+    // Warm golden post-apocalyptic sky
+    grad.addColorStop(0, '#38bdf8');
+    grad.addColorStop(0.65, '#bae6fd');
+    grad.addColorStop(1, '#fef3c7');
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, groundY);
+
+  // Sun (if not raining)
+  if (state.weather !== 'rain') {
+    ctx.save();
+    ctx.fillStyle = state.weather === 'sunny' ? 'rgba(253, 224, 71, 0.9)' : 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(w - 110, 65, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(253, 224, 71, 0.2)';
+    ctx.beginPath();
+    ctx.arc(w - 110, 65, 52 + Math.sin(animTime * 2) * 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Moving Clouds
+  clouds.forEach(c => {
+    drawCloud(c.x - cameraX * 0.25, c.y, c.s);
+  });
+
+  // Distant Ruined City Silhouette (Parallax Depth)
+  ctx.fillStyle = state.weather === 'rain' ? '#64748b' : '#94a3b8';
+  const buildingsBg = [
+    { x: 40, w: 55, h: 110 }, { x: 110, w: 45, h: 80 }, { x: 210, w: 70, h: 130 },
+    { x: 350, w: 50, h: 95 }, { x: 480, w: 80, h: 140 }, { x: 630, w: 60, h: 100 },
+    { x: 760, w: 75, h: 120 }, { x: 900, w: 65, h: 90 }, { x: 1020, w: 80, h: 125 }
+  ];
+  buildingsBg.forEach(b => {
+    const bx = b.x - cameraX * 0.4;
+    ctx.fillRect(bx, groundY - b.h, b.w, b.h);
+    // Ruined notch on top
+    ctx.clearRect(bx + b.w * 0.6, groundY - b.h, b.w * 0.4, 14);
+    ctx.fillStyle = grad;
+    ctx.fillRect(bx + b.w * 0.6, groundY - b.h, b.w * 0.4, 14);
+    ctx.fillStyle = state.weather === 'rain' ? '#64748b' : '#94a3b8';
+  });
+
+  // Midground Rolling Hills with Overgrown Nature
+  ctx.fillStyle = state.weather === 'rain' ? '#3f6212' : '#65a30d';
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  for (let x = 0; x <= w + 60; x += 60) {
+    const worldSample = x + cameraX * 0.65;
+    const hillH = 35 + Math.sin(worldSample * 0.008) * 18 + Math.cos(worldSample * 0.015) * 10;
+    ctx.lineTo(x, groundY - hillH);
+  }
+  ctx.lineTo(w, groundY);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCloud(x, y, scale) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = state.weather === 'rain' ? 'rgba(203, 213, 225, 0.7)' : 'rgba(255, 255, 255, 0.85)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 20, 0, Math.PI * 2);
+  ctx.arc(22, -5, 24, 0, Math.PI * 2);
+  ctx.arc(46, 0, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawGroundAndScenery(groundY, h) {
+  // Main Grass Strip
+  ctx.fillStyle = '#4d7c0f';
+  ctx.fillRect(0, groundY, canvas.width, 14);
+
+  // Soil / Road Layer
+  ctx.fillStyle = '#57534e';
+  ctx.fillRect(0, groundY + 14, canvas.width, h - groundY - 14);
+
+  // Subtle road stones & grass tufts
+  ctx.save();
+  ctx.translate(-cameraX, 0);
+  for (let x = 20; x < WORLD_WIDTH; x += 45) {
+    // Grass tuft
+    ctx.fillStyle = '#84cc16';
+    ctx.beginPath();
+    ctx.moveTo(x, groundY + 4);
+    ctx.lineTo(x - 4, groundY - 6);
+    ctx.lineTo(x + 2, groundY + 2);
+    ctx.lineTo(x + 6, groundY - 7);
+    ctx.lineTo(x + 9, groundY + 4);
+    ctx.fill();
+
+    // Path pebble
+    ctx.fillStyle = '#44403c';
+    ctx.beginPath();
+    ctx.ellipse(x + 15, groundY + 28 + (x % 15), 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Decorative Trees & Vines
+  const treePositions = [40, 255, 445, 625, 980];
+  treePositions.forEach((tx, idx) => {
+    drawCuteTree(tx, groundY, idx % 2 === 0 ? 1 : 0.85);
+  });
+
+  // Location Specific Structures
+  if (state.currentLocation === 'base') {
+    drawBaseBuildings(groundY);
+  } else {
+    drawExplorationBackdrop(groundY, state.currentLocation);
+  }
+
+  // World Loot Items
+  state.worldLoot.forEach(loot => {
+    drawLootSparkle(loot, groundY);
+  });
+
+  ctx.restore();
+}
+
+function drawCuteTree(x, groundY, scale) {
+  ctx.save();
+  ctx.translate(x, groundY);
+  ctx.scale(scale, scale);
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 28, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Trunk
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-7, -55, 14, 55);
+
+  // Fluffy foliage
+  ctx.fillStyle = '#15803d';
+  ctx.beginPath();
+  ctx.arc(0, -68, 28, 0, Math.PI * 2);
+  ctx.arc(-18, -56, 20, 0, Math.PI * 2);
+  ctx.arc(18, -56, 20, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath();
+  ctx.arc(-5, -74, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBaseBuildings(groundY) {
+  // 1. Main House (x=140)
+  const mhLvl = state.buildings.mainHouse.level;
+  ctx.save();
+  ctx.translate(140, groundY);
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath(); ctx.ellipse(0, 4, 65, 10, 0, 0, Math.PI * 2); ctx.fill();
+  // Walls
+  ctx.fillStyle = mhLvl > 1 ? '#fef3c7' : '#e7e5e4';
+  ctx.fillRect(-52, -85, 104, 85);
+  ctx.strokeStyle = '#78350f'; ctx.lineWidth = 3;
+  ctx.strokeRect(-52, -85, 104, 85);
+  // Roof
+  ctx.fillStyle = mhLvl > 1 ? '#dc2626' : '#b45309';
+  ctx.beginPath();
+  ctx.moveTo(-64, -85); ctx.lineTo(0, -132); ctx.lineTo(64, -85);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // Door & Warm Window
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-14, -45, 28, 45);
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(-40, -68, 20, 20);
+  ctx.fillRect(20, -68, 20, 20);
+  // Level Badge
+  drawWorldSign(0, -142, `🏠 Nhà chính Lv.${mhLvl}`);
+  ctx.restore();
+
+  // 2. Warehouse (x=340)
+  const whLvl = state.buildings.warehouse.level;
+  ctx.save();
+  ctx.translate(340, groundY);
+  ctx.fillStyle = '#9ca3af';
+  ctx.fillRect(-45, -65, 90, 65);
+  ctx.strokeStyle = '#374151'; ctx.lineWidth = 2.5;
+  ctx.strokeRect(-45, -65, 90, 65);
+  // Corrugated roof
+  ctx.fillStyle = '#4b5563';
+  ctx.fillRect(-50, -75, 100, 12);
+  // Crates
+  ctx.fillStyle = '#d97706';
+  ctx.fillRect(-30, -28, 26, 28);
+  ctx.fillRect(4, -28, 26, 28);
+  drawWorldSign(0, -88, `📦 Nhà kho Lv.${whLvl}`);
+  ctx.restore();
+
+  // 3. Vegetable Garden (x=520)
+  const gd = state.buildings.garden;
+  ctx.save();
+  ctx.translate(520, groundY);
+  // Wooden planter box
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-52, -16, 104, 16);
+  ctx.fillStyle = '#451a03';
+  ctx.fillRect(-48, -20, 96, 6);
+  // Crops based on state
+  if (gd.state === 'growing') {
+    for (let cx = -36; cx <= 36; cx += 18) {
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(cx, -24, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (gd.state === 'ready') {
+    for (let cx = -36; cx <= 36; cx += 18) {
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath(); ctx.arc(cx, -28, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath(); ctx.arc(cx + 2, -26, 4, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  const gdStatus = gd.state === 'ready' ? '✨ Thu hoạch!' : (gd.state === 'growing' ? '🌿 Đang lớn' : '🌱 Vườn rau');
+  drawWorldSign(0, -48, `${gdStatus} Lv.${gd.level}`);
+  ctx.restore();
+
+  // 4. Rest Area / Tent & Campfire (x=700)
+  const rsLvl = state.buildings.restArea.level;
+  ctx.save();
+  ctx.translate(700, groundY);
+  // Cute Tent
+  ctx.fillStyle = rsLvl > 1 ? '#0ea5e9' : '#10b981';
+  ctx.beginPath();
+  ctx.moveTo(-45, 0); ctx.lineTo(-10, -52); ctx.lineTo(25, 0);
+  ctx.closePath(); ctx.fill();
+  // Campfire
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(32, -6, 20, 6);
+  const flameH = 14 + Math.sin(animTime * 10) * 3;
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.moveTo(35, -6); ctx.lineTo(42, -6 - flameH); ctx.lineTo(49, -6);
+  ctx.fill();
+  drawWorldSign(0, -64, `⛺ Nghỉ ngơi Lv.${rsLvl}`);
+  ctx.restore();
+
+  // 5. Workshop (x=870)
+  const wsLvl = state.buildings.workshop.level;
+  ctx.save();
+  ctx.translate(870, groundY);
+  ctx.fillStyle = '#b45309';
+  ctx.fillRect(-44, -60, 88, 60);
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(-48, -68, 96, 10);
+  // Anvil & Gear icon
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(-15, -20, 30, 20);
+  drawWorldSign(0, -82, `🛠️ Chế tạo Lv.${wsLvl}`);
+  ctx.restore();
+}
+
+function drawExplorationBackdrop(groundY, locId) {
+  // Return Sign at x=80
+  ctx.save();
+  ctx.translate(80, groundY);
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-4, -45, 8, 45);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(-32, -45, 64, 22);
+  ctx.fillStyle = '#111827';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('⬅ CĂN CỨ', 0, -30);
+  ctx.restore();
+
+  // Main Landmark Structure in center
+  ctx.save();
+  ctx.translate(520, groundY);
+  if (locId === 'store') {
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(-140, -105, 280, 105);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(-145, -125, 290, 22);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MINI MART 24/7', 0, -110);
+    // Cracked glass window
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillRect(-110, -85, 90, 55);
+    ctx.fillRect(20, -85, 90, 55);
+  } else if (locId === 'residential') {
+    ctx.fillStyle = '#fed7aa';
+    ctx.fillRect(-120, -95, 110, 95);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(10, -115, 120, 115);
+    ctx.fillStyle = '#9a3412';
+    ctx.beginPath(); ctx.moveTo(-130, -95); ctx.lineTo(-65, -135); ctx.lineTo(0, -95); ctx.fill();
+  } else if (locId === 'park' || locId === 'greenhouse') {
+    // Broken Fountain
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(-60, -25, 120, 25);
+    ctx.fillRect(-18, -60, 36, 35);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(-52, -28, 104, 5);
+  } else if (locId === 'clinic') {
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(-130, -105, 260, 105);
+    ctx.fillStyle = '#ef4444';
+    // Red Cross
+    ctx.fillRect(-8, -90, 16, 44);
+    ctx.fillRect(-22, -76, 44, 16);
+  }
+  ctx.restore();
+}
+
+function drawLootSparkle(loot, groundY) {
+  const bob = Math.sin(animTime * 4 + loot.x) * 4;
+  ctx.save();
+  ctx.translate(loot.x, groundY - 18 + bob);
+  // Glow circle
+  ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 20, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = '22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(loot.icon, 0, 0);
+
+  drawWorldSign(0, -26, loot.name);
+  ctx.restore();
+}
+
+function drawWorldSign(x, y, text) {
+  ctx.save();
+  ctx.font = 'bold 11px sans-serif';
+  const tw = ctx.measureText(text).width + 14;
+  ctx.fillStyle = 'rgba(17, 24, 39, 0.8)';
+  ctx.beginPath();
+  ctx.roundRect(x - tw / 2, y - 10, tw, 20, 6);
+  ctx.fill();
+  ctx.fillStyle = '#f9fafb';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+/* ==========================================================================
+   7. CUTE ANIMATED 2D CHARACTER RENDERER
+   ========================================================================== */
+function drawCharacter(x, groundY, opts) {
+  const { name, colors, dir, isMoving, isTalking, isPlayer, mood } = opts;
+  const walkCycle = isMoving ? Math.sin(animTime * 12) : 0;
+  const idleBob = isMoving ? Math.abs(Math.sin(animTime * 12)) * 3 : Math.sin(animTime * 3) * 1.5;
+
+  ctx.save();
+  ctx.translate(x - cameraX, groundY);
+
+  // Ground Shadow
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 18, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Legs (animated)
+  ctx.strokeStyle = colors.pants;
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  // Left leg
+  ctx.beginPath();
+  ctx.moveTo(-5, -18 - idleBob);
+  ctx.lineTo(-6 + walkCycle * 7, -2);
+  ctx.stroke();
+  // Right leg
+  ctx.beginPath();
+  ctx.moveTo(5, -18 - idleBob);
+  ctx.lineTo(6 - walkCycle * 7, -2);
+  ctx.stroke();
+
+  // Torso / Jacket
+  ctx.fillStyle = colors.shirt;
+  ctx.beginPath();
+  ctx.roundRect(-12, -42 - idleBob, 24, 26, 7);
+  ctx.fill();
+  ctx.strokeStyle = '#1f2937';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Backpack strap detail
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-7, -41 - idleBob);
+  ctx.lineTo(-7, -18 - idleBob);
+  ctx.moveTo(7, -41 - idleBob);
+  ctx.lineTo(7, -18 - idleBob);
+  ctx.stroke();
+
+  // Arms
+  ctx.strokeStyle = colors.skin;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(-13, -37 - idleBob);
+  ctx.lineTo(-15 - walkCycle * 5, -22 - idleBob);
+  ctx.moveTo(13, -37 - idleBob);
+  ctx.lineTo(15 + walkCycle * 5, -22 - idleBob);
+  ctx.stroke();
+
+  // Cute Chibi Head
+  const headY = -56 - idleBob;
+  ctx.fillStyle = colors.skin;
+  ctx.beginPath();
+  ctx.arc(0, headY, 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#1f2937';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Hair
+  ctx.fillStyle = colors.hair;
+  ctx.beginPath();
+  ctx.arc(0, headY - 3, 16.5, Math.PI, Math.PI * 2);
+  ctx.lineTo(17, headY + 2);
+  ctx.lineTo(10, headY - 5);
+  ctx.lineTo(0, headY - 2);
+  ctx.lineTo(-10, headY - 5);
+  ctx.lineTo(-17, headY + 2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ponytail / Long hair for Linh
+  if (name === 'Linh') {
+    ctx.beginPath();
+    ctx.arc(-dir * 14, headY + 2, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Face Direction Offset
+  const eyeOffset = dir * 4;
+  // Eyes
+  ctx.fillStyle = '#111827';
+  ctx.beginPath();
+  ctx.arc(-4 + eyeOffset, headY + 1, 2.2, 0, Math.PI * 2);
+  ctx.arc(5 + eyeOffset, headY + 1, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye Shine
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(-4.7 + eyeOffset, headY + 0.2, 0.8, 0, Math.PI * 2);
+  ctx.arc(4.3 + eyeOffset, headY + 0.2, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Blush
+  ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(-7 + eyeOffset, headY + 5, 3, 1.6, 0, 0, Math.PI * 2);
+  ctx.ellipse(8 + eyeOffset, headY + 5, 3, 1.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Expression Mouth (Happy / Neutral / Talking)
+  ctx.strokeStyle = '#7f1d1d';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  if (isTalking) {
+    ctx.arc(0.5 + eyeOffset, headY + 6, 2.5, 0, Math.PI * 2);
+  } else if (mood >= 50) {
+    ctx.arc(0.5 + eyeOffset, headY + 4.5, 3.2, 0.15 * Math.PI, 0.85 * Math.PI);
+  } else {
+    ctx.moveTo(-2.5 + eyeOffset, headY + 7);
+    ctx.lineTo(3.5 + eyeOffset, headY + 7);
+  }
+  ctx.stroke();
+
+  // Name Tag above head
+  drawWorldSign(0, headY - 26, isPlayer ? '⭐ Bạn (Chỉ huy)' : name);
+
+  ctx.restore();
+}
+
+/* ==========================================================================
+   8. MAIN ANIMATION & RENDER LOOP
+   ========================================================================== */
+let lastFrameTime = performance.now();
+
+function gameLoop(now) {
+  const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+  lastFrameTime = now;
+  animTime += dt;
+
+  if (gameRunning) {
+    updateWorld(dt);
+    renderWorld();
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+function updateWorld(dt) {
+  // Move Clouds
+  clouds.forEach(c => {
+    c.x += c.speed * dt;
+    if (c.x > WORLD_WIDTH + 200) c.x = -120;
+  });
+
+  // Move Rain
+  if (state.weather === 'rain') {
+    raindrops.forEach(r => {
+      r.y += r.v * dt;
+      r.x -= 60 * dt;
+      if (r.y > canvas.height) {
+        r.y = -15;
+        r.x = Math.random() * (canvas.width + 200);
+      }
+    });
+  }
+
+  // Player Movement
+  const speed = 190;
+  if (keys.left) {
+    state.playerX = Math.max(45, state.playerX - speed * dt);
+    state.playerDir = -1;
+  }
+  if (keys.right) {
+    state.playerX = Math.min(WORLD_WIDTH - 45, state.playerX + speed * dt);
+    state.playerDir = 1;
+  }
+
+  // Smooth Camera Follow
+  const targetCam = Math.max(0, Math.min(WORLD_WIDTH - canvas.width, state.playerX - canvas.width / 2));
+  cameraX += (targetCam - cameraX) * Math.min(1, dt * 8);
+
+  // Subtle NPC idle wandering at base
+  if (state.currentLocation === 'base') {
+    Object.values(state.characters).forEach((c, i) => {
+      if (Math.sin(animTime * 0.7 + i * 2) > 0.995) {
+        c.dir *= -1;
+      }
+    });
+  }
+
+  // Detect Nearest Interactable
+  const interactables = getInteractablesAtCurrentLocation();
+  let closest = null;
+  let minDist = 75;
+  for (let item of interactables) {
+    const d = Math.abs(state.playerX - item.x);
+    if (d < minDist) {
+      minDist = d;
+      closest = item;
+    }
+  }
+  nearestTarget = closest;
+  const promptBtn = document.getElementById('btn-interact');
+  if (nearestTarget) {
+    promptBtn.style.display = 'block';
+    promptBtn.textContent = `👆 ${nearestTarget.label}`;
+  } else {
+    promptBtn.style.display = 'none';
+  }
+}
+
+function renderWorld() {
+  const w = canvas.width;
+  const h = canvas.height;
+  const groundY = Math.floor(h * 0.78);
+
+  ctx.clearRect(0, 0, w, h);
+
+  drawSkyAndAtmosphere(w, h, groundY);
+  drawGroundAndScenery(groundY, h);
+
+  // Draw NPCs if at base
+  if (state.currentLocation === 'base') {
+    Object.values(state.characters).forEach(c => {
+      drawCharacter(c.x, groundY, {
+        name: c.name,
+        colors: c.colors,
+        dir: c.dir,
+        isMoving: false,
+        isTalking: false,
+        isPlayer: false,
+        mood: c.mood
+      });
+    });
+  }
+
+  // Draw Player Character
+  drawCharacter(state.playerX, groundY, {
+    name: 'Player',
+    colors: { hair: '#1e1b4b', shirt: '#ec4899', pants: '#1f2937', skin: '#ffe0bd' },
+    dir: state.playerDir,
+    isMoving: keys.left || keys.right,
+    isTalking: false,
+    isPlayer: true,
+    mood: 90
+  });
+
+  // Weather Rain Overlay
+  if (state.weather === 'rain') {
+    ctx.strokeStyle = 'rgba(186, 230, 253, 0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    raindrops.forEach(r => {
+      ctx.moveTo(r.x, r.y);
+      ctx.lineTo(r.x - 4, r.y + r.l);
+    });
+    ctx.stroke();
+  }
+}
+
+requestAnimationFrame(gameLoop);
+
+/* ==========================================================================
+   9. INTERACTION HANDLERS (CHARACTERS, BUILDINGS, LOOT, TRAVEL)
+   ========================================================================== */
+function executeInteraction(item) {
+  AudioFX.play(500, 'triangle', 0.08);
+  if (item.type === 'char') {
+    openCharacterDialogue(item.id);
+  } else if (item.type === 'building') {
+    openBuildingModal(item.id);
+  } else if (item.type === 'loot') {
+    collectLoot(item.data);
+  } else if (item.type === 'exit') {
+    travelToLocation('base', true);
+  }
+}
+
+function collectLoot(loot) {
+  if (!consumeAP(1, `Thu thập ${loot.name}`)) return;
+
+  let summary = [];
+  for (let [k, v] of Object.entries(loot.reward)) {
+    // Warehouse level bonus
+    const bonus = (k === 'wood' || k === 'mats' || k === 'food') && state.buildings.warehouse.level > 1 ? 1 : 0;
+    const total = v + bonus;
+    state.resources[k] += total;
+    summary.push(`+${total} ${getResName(k)}`);
+  }
+
+  state.worldLoot = state.worldLoot.filter(l => l.id !== loot.id);
+  addLog(`Đã thu thập ${loot.name}: ${summary.join(', ')}.`, 'good');
+  showToast(`Nhận được: ${summary.join(', ')}`);
+  updateAllUI();
+  autoSave();
+}
+
+/* ==========================================================================
+   10. CHARACTER DIALOGUE & ASSIGNMENT SYSTEM
+   ========================================================================== */
+const DIALOGUE_DATA = {
+  an: {
+    greetings: [
+      'Chào cậu. Tôi đang kiểm tra lại danh sách lương thực và kế hoạch tuần tra hôm nay.',
+      'Mọi người đều tin tưởng vào quyết định của cậu. Chúng ta cần tính toán kỹ từng lượt hành động.',
+      'Nếu nâng cấp được Nhà chính, tinh thần của cả nhóm sẽ vững vàng hơn nhiều.'
+    ],
+    encourageReply: 'Cảm ơn cậu. Nghe cậu nói vậy tôi thấy nhẹ nhõm hơn hẳn. Cả nhóm sẽ vượt qua thôi!',
+    askReply: 'Hiện tại điều tôi lo nhất là nguồn nước và thuốc men. Khi ra ngoài khám phá, hãy ưu tiên Trạm y tế và Cửa hàng nhé.'
+  },
+  linh: {
+    greetings: [
+      'A, cậu tới rồi! Nhìn những mầm cây nhỏ ngoài vườn kìa, chúng làm khu căn cứ có sức sống hẳn lên!',
+      'Hôm nay thời tiết thế nào nhỉ? Nếu trời mưa thì vườn rau sẽ thích lắm đấy!',
+      'Tớ mới tìm thấy vài cách ủ phân tự nhiên từ lá khô, năng suất rau chắc chắn sẽ tăng!'
+    ],
+    encourageReply: 'Hihi, cảm ơn cậu! Có cậu động viên, tớ có thêm động lực chăm sóc khu vườn xanh mướt luôn!',
+    askReply: 'Tớ rất thích không khí ở đây. Dù bên ngoài hoang tàn nhưng chỉ cần còn hạt giống, chúng ta sẽ không bao giờ đói!'
+  },
+  minh: {
+    greetings: [
+      'Hừm, mấy tấm ván hàng rào phía đông hơi lỏng rồi. Đưa tôi ít gỗ và vật liệu, tôi sẽ gia cố lại.',
+      'Đừng lãng phí tài nguyên vào những thứ vô bổ. Thực tế lên, cái gì giúp sống sót thì ưu tiên trước.',
+      'Xưởng chế tạo mà nâng cấp xong thì tôi có thể lọc nước sạch nhanh hơn nhiều.'
+    ],
+    encourageReply: 'Khụ... Được rồi, không cần khách sáo thế đâu. Tôi sẽ làm tốt phần việc của mình.',
+    askReply: 'Sức khỏe tôi ổn. Chỉ cần đừng để thiếu nước uống là tôi có thể làm việc cả ngày.'
+  }
+};
+
+function openCharacterDialogue(charId) {
+  const c = state.characters[charId];
+  const d = DIALOGUE_DATA[charId];
+  const greeting = d.greetings[state.day % d.greetings.length];
+
+  const html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#181b26; padding:10px; border-radius:8px;">
+      <div>
+        <div style="font-weight:800; font-size:1rem;">${c.name} <span class="char-role">${c.role}</span></div>
+        <div style="font-size:0.78rem; color:#9ca3af;">${c.personality}</div>
+      </div>
+      <div style="text-align:right; font-size:0.8rem;">
+        <div>❤️ Máu: <b>${c.hp}%</b></div>
+        <div>😊 Tâm trạng: <b>${c.mood}%</b></div>
+        <div>🤝 Quan hệ: <b>${c.rel}/100</b></div>
+      </div>
+    </div>
+
+    <div class="dialogue-bubble" id="char-speech">
+      "${greeting}"
+    </div>
+
+    <div style="font-size:0.8rem; color:#fbbf24;">
+      📌 Nhiệm vụ riêng: <b>${c.questTitle}</b> ${c.questDone ? '✅ (Hoàn thành)' : '⏳ (Đang thực hiện)'}
+    </div>
+
+    <div class="choice-list" id="char-choices">
+      <button class="choice-btn" onclick="handleCharChoice('${charId}', 'encourage')">
+        🌟 Động viên tinh thần (+Tâm trạng, +Quan hệ)
+      </button>
+      <button class="choice-btn" onclick="handleCharChoice('${charId}', 'ask')">
+        💬 Hỏi thăm tình hình & lời khuyên
+      </button>
+      <button class="choice-btn" onclick="openAssignMenu('${charId}')">
+        📋 Phân công công việc hôm nay (Hiện tại: ${getAssignLabel(c.assigned)})
+      </button>
+      <button class="choice-btn" onclick="handleCharChoice('${charId}', 'heal')">
+        💊 Tặng 1 Thuốc để hồi phục (+35 Máu, +10 Quan hệ)
+      </button>
+    </div>
+  `;
+
+  openModal(`Trò chuyện với ${c.name}`, html);
+}
+
+function handleCharChoice(charId, action) {
+  const c = state.characters[charId];
+  const d = DIALOGUE_DATA[charId];
+  const speechEl = document.getElementById('char-speech');
+
+  if (action === 'encourage') {
+    if (c.talkedToday) {
+      speechEl.innerHTML = `"Hôm nay chúng ta đã trò chuyện rồi, để dành sức cho công việc nhé!"`;
+      return;
+    }
+    c.talkedToday = true;
+    c.mood = Math.min(100, c.mood + 12);
+    c.rel = Math.min(100, c.rel + 8);
+    speechEl.innerHTML = `"${d.encourageReply}" <br><span style="color:#10b981; font-size:0.8rem;">(+12 Tâm trạng, +8 Quan hệ)</span>`;
+    addLog(`Bạn đã động viên ${c.name}, tinh thần của ${c.name} tốt hơn hẳn.`, 'good');
+  } else if (action === 'ask') {
+    c.rel = Math.min(100, c.rel + 2);
+    speechEl.innerHTML = `"${d.askReply}"`;
+  } else if (action === 'heal') {
+    if (state.resources.meds <= 0) {
+      showToast('❌ Không đủ Thuốc!');
+      return;
+    }
+    state.resources.meds -= 1;
+    c.hp = Math.min(100, c.hp + 35);
+    c.mood = Math.min(100, c.mood + 8);
+    c.rel = Math.min(100, c.rel + 10);
+    speechEl.innerHTML = `"Cảm ơn cậu nhiều lắm, tôi thấy khỏe khoắn hơn hẳn rồi!" <br><span style="color:#10b981; font-size:0.8rem;">(+35 Máu, +10 Quan hệ)</span>`;
+    addLog(`Dùng 1 Thuốc chữa trị cho ${c.name}.`, 'good');
+  }
+
+  AudioFX.play(600, 'sine', 0.1);
+  updateAllUI();
+  autoSave();
+}
+
+function openAssignMenu(charId) {
+  const c = state.characters[charId];
+  const html = `
+    <p>Chọn công việc cho <b>${c.name}</b> thực hiện vào cuối ngày (tiêu hao nhẹ tâm trạng nhưng tạo ra tài nguyên):</p>
+    <div class="choice-list">
+      <button class="choice-btn" onclick="setAssignment('${charId}', 'forage')">🥫 Tìm kiếm lương thực & nước (+2 Thực phẩm, +2 Nước)</button>
+      <button class="choice-btn" onclick="setAssignment('${charId}', 'gather')">🪵 Thu gom gỗ & vật liệu (+3 Gỗ, +2 Vật liệu)</button>
+      <button class="choice-btn" onclick="setAssignment('${charId}', 'farm')">🌱 Chăm sóc vườn & tìm hạt giống (+2 Hạt giống, tăng tốc vườn)</button>
+      <button class="choice-btn" onclick="setAssignment('${charId}', 'rest')">🛌 Nghỉ ngơi tại căn cứ (+20 Máu, +15 Tâm trạng)</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="openCharacterDialogue('${charId}')">⬅ Quay lại</button>
+  `;
+  openModal(`Phân công cho ${c.name}`, html);
+}
+
+function setAssignment(charId, task) {
+  const c = state.characters[charId];
+  c.assigned = task;
+  addLog(`Đã phân công ${c.name}: ${getAssignLabel(task)}.`, 'warn');
+  showToast(`Đã giao việc cho ${c.name}`);
+  updateAllUI();
+  autoSave();
+  openCharacterDialogue(charId);
+}
+
+function getAssignLabel(task) {
+  const map = {
+    none: 'Chưa phân công',
+    forage: 'Tìm lương thực & nước',
+    gather: 'Thu gom gỗ & vật liệu',
+    farm: 'Chăm sóc vườn & hạt giống',
+    rest: 'Nghỉ ngơi hồi phục'
+  };
+  return map[task] || 'Chưa phân công';
+}
+
+/* ==========================================================================
+   11. BASE BUILDINGS INTERACTION & UPGRADES
+   ========================================================================== */
+function openBuildingModal(bId) {
+  const b = state.buildings[bId];
+  const upWood = b.level * 5;
+  const upMats = b.level * 4;
+
+  let specialActions = '';
+
+  if (bId === 'mainHouse') {
+    specialActions = `
+      <button class="btn btn-green" onclick="holdTeamMeeting()">
+        🗣️ Họp bàn & Cổ vũ cả nhóm (1 Lượt: +12 Tâm trạng toàn đội)
+      </button>
+    `;
+  } else if (bId === 'warehouse') {
+    specialActions = `
+      <div class="dialogue-bubble">
+        Nhà kho Cấp ${b.level} giúp bảo quản thực phẩm tốt hơn và tăng thêm <b>+${b.level - 1}</b> tài nguyên khi thu thập ngoài bản đồ.
+      </div>
+    `;
+  } else if (bId === 'garden') {
+    if (b.state === 'empty') {
+      specialActions = `
+        <button class="btn btn-green" onclick="plantSeeds()">
+          🌱 Gieo hạt giống (Tốn 2 Hạt giống & 1 Nước - Thu hoạch sau 1 ngày)
+        </button>
+      `;
+    } else if (b.state === 'growing') {
+      specialActions = `
+        <div class="dialogue-bubble">🌿 Cây đang phát triển tốt! Sẽ sẵn sàng thu hoạch vào ngày mai.</div>
+      `;
+    } else if (b.state === 'ready') {
+      specialActions = `
+        <button class="btn btn-green" onclick="harvestGarden()">
+          🧺 Thu hoạch rau củ (+${5 + b.level * 2} Thực phẩm, +1 Hạt giống)
+        </button>
+      `;
+    }
+  } else if (bId === 'restArea') {
+    specialActions = `
+      <button class="btn btn-blue" onclick="teamRestAction()">
+        ⛺ Cả nhóm nghỉ ngơi (1 Lượt: +20 Máu & +15 Tâm trạng cho tất cả)
+      </button>
+    `;
+  } else if (bId === 'workshop') {
+    specialActions = `
+      <div class="choice-list">
+        <button class="choice-btn" onclick="craftItem('water')">💧 Lọc nước sạch (Tốn 2 Gỗ ➡ +4 Nước uống)</button>
+        <button class="choice-btn" onclick="craftItem('mats')">🧱 Gia công vật liệu (Tốn 3 Gỗ ➡ +3 Vật liệu xây dựng)</button>
+        <button class="choice-btn" onclick="craftItem('meds')">💊 Điều chế thảo dược (Tốn 2 Hạt giống + 2 Nước ➡ +2 Thuốc)</button>
+      </div>
+    `;
+  }
+
+  const html = `
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span class="char-role">Cấp độ hiện tại: ${b.level}</span>
+      <span style="font-size:0.8rem; color:#9ca3af;">Căn cứ Bình Minh</span>
+    </div>
+    <p>${b.desc}</p>
+    ${specialActions}
+    <hr style="border-color:#363c54;">
+    <div>
+      <div style="font-weight:700; margin-bottom:6px;">🔨 Nâng cấp công trình (Lên Cấp ${b.level + 1})</div>
+      <div style="font-size:0.82rem; color:#d1d5db; margin-bottom:8px;">
+        Yêu cầu: <b>${upWood} Gỗ</b>, <b>${upMats} Vật liệu</b> và <b>1 Lượt hành động</b>.
+      </div>
+      <button class="btn btn-sm" onclick="upgradeBuilding('${bId}')">⬆️ Nâng cấp ngay</button>
+    </div>
+  `;
+
+  openModal(b.name, html);
+}
+
+function upgradeBuilding(bId) {
+  const b = state.buildings[bId];
+  const upWood = b.level * 5;
+  const upMats = b.level * 4;
+
+  if (state.resources.wood < upWood || state.resources.mats < upMats) {
+    showToast('❌ Không đủ Gỗ hoặc Vật liệu!');
+    return;
+  }
+  if (!consumeAP(1, `Nâng cấp ${b.name}`)) return;
+
+  state.resources.wood -= upWood;
+  state.resources.mats -= upMats;
+  b.level += 1;
+
+  // Check Personal Quests
+  if (bId === 'mainHouse' && b.level >= 2 && !state.characters.an.questDone) {
+    state.characters.an.questDone = true;
+    state.characters.an.rel = Math.min(100, state.characters.an.rel + 20);
+    addLog('🎉 Hoàn thành nhiệm vụ của An: Củng cố Nhà chính! (+20 Quan hệ với An)', 'good');
+  }
+  if (bId === 'workshop' && b.level >= 2 && !state.characters.minh.questDone) {
+    state.characters.minh.questDone = true;
+    state.characters.minh.rel = Math.min(100, state.characters.minh.rel + 20);
+    addLog('🎉 Hoàn thành nhiệm vụ của Minh: Gia cố xưởng chế tạo! (+20 Quan hệ với Minh)', 'good');
+  }
+
+  AudioFX.play(680, 'triangle', 0.18);
+  addLog(`Đã nâng cấp ${b.name} lên Cấp ${b.level}!`, 'good');
+  showToast(`✨ ${b.name} đã đạt Cấp ${b.level}!`);
+  updateAllUI();
+  autoSave();
+  openBuildingModal(bId);
+}
+
+function holdTeamMeeting() {
+  if (!consumeAP(1, 'Họp bàn chiến lược')) return;
+  Object.values(state.characters).forEach(c => {
+    c.mood = Math.min(100, c.mood + 12);
+    c.rel = Math.min(100, c.rel + 4);
+  });
+  addLog('Cả nhóm họp mặt tại Nhà chính, tinh thần đoàn kết tăng cao (+12 Tâm trạng).', 'good');
+  showToast('🗣️ Tinh thần cả nhóm tăng lên!');
+  updateAllUI();
+  autoSave();
+  closeModal();
+}
+
+function plantSeeds() {
+  if (state.resources.seeds < 2 || state.resources.water < 1) {
+    showToast('❌ Cần 2 Hạt giống và 1 Nước uống!');
+    return;
+  }
+  state.resources.seeds -= 2;
+  state.resources.water -= 1;
+  state.buildings.garden.state = 'growing';
+  state.buildings.garden.growDays = 1;
+
+  if (!state.characters.linh.questDone) {
+    state.characters.linh.questDone = true;
+    state.characters.linh.rel = Math.min(100, state.characters.linh.rel + 20);
+    addLog('🎉 Hoàn thành nhiệm vụ của Linh: Mùa vụ đầu tiên! (+20 Quan hệ với Linh)', 'good');
+  }
+
+  addLog('Đã gieo hạt giống tại Vườn rau. Ngày mai sẽ có thể thu hoạch.', 'good');
+  showToast('🌱 Đã gieo hạt giống!');
+  updateAllUI();
+  autoSave();
+  openBuildingModal('garden');
+}
+
+function harvestGarden() {
+  const b = state.buildings.garden;
+  const yieldFood = 5 + b.level * 2;
+  state.resources.food += yieldFood;
+  state.resources.seeds += 1;
+  b.state = 'empty';
+  b.growDays = 0;
+
+  AudioFX.play(700, 'sine', 0.15);
+  addLog(`Thu hoạch Vườn rau nhận được +${yieldFood} Thực phẩm và +1 Hạt giống!`, 'good');
+  showToast(`🧺 Thu hoạch +${yieldFood} Thực phẩm!`);
+  updateAllUI();
+  autoSave();
+  openBuildingModal('garden');
+}
+
+function teamRestAction() {
+  if (!consumeAP(1, 'Nghỉ ngơi tập thể')) return;
+  const bonus = state.buildings.restArea.level * 5;
+  Object.values(state.characters).forEach(c => {
+    c.hp = Math.min(100, c.hp + 15 + bonus);
+    c.mood = Math.min(100, c.mood + 12 + bonus);
+  });
+  addLog('Cả nhóm nghỉ ngơi tại Khu nghỉ ngơi, hồi phục sức khỏe và tâm trạng.', 'good');
+  showToast('⛺ Mọi người đã khỏe khoắn hơn!');
+  updateAllUI();
+  autoSave();
+  closeModal();
+}
+
+function craftItem(type) {
+  if (type === 'water') {
+    if (state.resources.wood < 2) return showToast('❌ Cần 2 Gỗ!');
+    state.resources.wood -= 2;
+    state.resources.water += 4;
+    addLog('Chế tạo: Đun sôi & lọc được +4 Nước uống từ 2 Gỗ.', 'good');
+    showToast('💧 +4 Nước uống');
+  } else if (type === 'mats') {
+    if (state.resources.wood < 3) return showToast('❌ Cần 3 Gỗ!');
+    state.resources.wood -= 3;
+    state.resources.mats += 3;
+    addLog('Chế tạo: Gia công được +3 Vật liệu xây dựng từ 3 Gỗ.', 'good');
+    showToast('🧱 +3 Vật liệu');
+  } else if (type === 'meds') {
+    if (state.resources.seeds < 2 || state.resources.water < 2) return showToast('❌ Cần 2 Hạt giống & 2 Nước!');
+    state.resources.seeds -= 2;
+    state.resources.water -= 2;
+    state.resources.meds += 2;
+    addLog('Chế tạo: Điều chế thành công +2 Thuốc thảo dược.', 'good');
+    showToast('💊 +2 Thuốc');
+  }
+  AudioFX.play(560, 'triangle', 0.1);
+  updateAllUI();
+  autoSave();
+}
+
+/* ==========================================================================
+   12. TRAVEL & RANDOM EVENTS SYSTEM
+   ========================================================================== */
+function travelToLocation(locId, freeReturn = false) {
+  if (locId === state.currentLocation) return;
+
+  if (!freeReturn && locId !== 'base') {
+    if (!consumeAP(1, `Di chuyển đến ${state.locations[locId].name}`)) return;
+  }
+
+  const fade = document.getElementById('fade-overlay');
+  fade.textContent = `Đang di chuyển đến ${state.locations[locId].name}...`;
+  fade.style.opacity = '1';
+  AudioFX.play(340, 'sine', 0.2);
+
+  setTimeout(() => {
+    state.currentLocation = locId;
+    state.playerX = locId === 'base' ? 280 : 140;
+    cameraX = 0;
+
+    if (!state.locations[locId].lootedToday) {
+      spawnLocationLoot(locId);
+      state.locations[locId].lootedToday = true;
+    } else if (locId === 'base') {
+      spawnLocationLoot('base');
+    } else {
+      state.worldLoot = [];
+    }
+
+    updateAllUI();
+    fade.style.opacity = '0';
+
+    // 45% chance to trigger a random exploration event when visiting outside locations
+    if (locId !== 'base' && Math.random() < 0.45) {
+      setTimeout(() => triggerRandomEvent('explore'), 400);
+    }
+    autoSave();
+  }, 380);
+}
+
+const RANDOM_EVENTS = [
+  {
+    id: 'rain_shower',
+    title: '🌧️ Cơn mưa bất chợt',
+    desc: 'Bầu trời kéo mây đen và đổ cơn mưa rào mát lành xuống vùng đất hoang.',
+    choices: [
+      {
+        text: '🪣 Hứng nước mưa dự trữ (+5 Nước uống)',
+        effect: () => {
+          state.weather = 'rain';
+          state.resources.water += 5;
+          addLog('Trời mưa lớn, cả nhóm hứng được +5 Nước uống.', 'good');
+        }
+      },
+      {
+        text: '🌱 Dẫn nước vào vườn rau (Vườn rau lớn nhanh hơn)',
+        effect: () => {
+          state.weather = 'rain';
+          if (state.buildings.garden.state === 'growing') {
+            state.buildings.garden.state = 'ready';
+          }
+          state.resources.water += 2;
+          addLog('Nước mưa giúp vườn rau xanh tốt bất ngờ (+2 Nước).', 'good');
+        }
+      }
+    ]
+  },
+  {
+    id: 'stranger_appears',
+    title: '🧳 Có người lạ xuất hiện',
+    desc: 'Một người lữ hành mang theo ba lô cũ tiến lại gần với vẻ mệt mỏi nhưng thân thiện. Ông ta muốn đổi ít thuốc lấy thức ăn.',
+    choices: [
+      {
+        text: '🤝 Đổi 3 Thực phẩm lấy 2 Thuốc & 2 Hạt giống',
+        effect: () => {
+          if (state.resources.food >= 3) {
+            state.resources.food -= 3;
+            state.resources.meds += 2;
+            state.resources.seeds += 2;
+            addLog('Trao đổi công bằng với người lữ hành (+2 Thuốc, +2 Hạt giống).', 'good');
+          } else {
+            state.resources.meds += 1;
+            addLog('Thấy nhóm bạn thiếu thốn, người lữ hành tặng miễn phí +1 Thuốc!', 'good');
+          }
+        }
+      },
+      {
+        text: '🗺️ Mời uống nước và hỏi thăm bản đồ (+Mở khóa địa điểm mới)',
+        effect: () => {
+          if (state.resources.water >= 2) state.resources.water -= 2;
+          state.locations.greenhouse.unlocked = true;
+          addLog('Người lữ hành chỉ đường tới "Nhà kính bỏ hoang" trên bản đồ!', 'good');
+        }
+      }
+    ]
+  },
+  {
+    id: 'team_argument',
+    title: '💢 Tranh luận giữa các thành viên',
+    desc: 'Minh muốn dùng toàn bộ vật liệu để gia cố tường rào, trong khi Linh muốn ưu tiên mở rộng khu trồng trọt.',
+    choices: [
+      {
+        text: '⚖️ Phân tích hài hòa cả hai phương án (An đồng tình, +Tâm trạng)',
+        effect: () => {
+          state.characters.an.rel = Math.min(100, state.characters.an.rel + 8);
+          state.characters.linh.mood = Math.min(100, state.characters.linh.mood + 5);
+          state.characters.minh.mood = Math.min(100, state.characters.minh.mood + 5);
+          addLog('Bạn hòa giải cuộc tranh luận khéo léo, mọi người đều vui vẻ.', 'good');
+        }
+      },
+      {
+        text: '🛠️ Ủng hộ Minh gia cố phòng thủ (+3 Vật liệu, +10 Quan hệ Minh)',
+        effect: () => {
+          state.resources.mats += 3;
+          state.characters.minh.rel = Math.min(100, state.characters.minh.rel + 10);
+          state.characters.linh.mood = Math.max(0, state.characters.linh.mood - 5);
+          addLog('Bạn chọn phương án thực tế của Minh (+3 Vật liệu).', 'warn');
+        }
+      }
+    ]
+  },
+  {
+    id: 'water_shortage',
+    title: '⚠️ Rò rỉ bồn chứa nước',
+    desc: 'Một vết nứt nhỏ trên thùng chứa khiến lượng nước dự trữ bị hao hụt!',
+    choices: [
+      {
+        text: '🔧 Nhờ Minh sửa ngay (Tốn 2 Vật liệu, giữ lại nước)',
+        effect: () => {
+          if (state.resources.mats >= 2) {
+            state.resources.mats -= 2;
+            addLog('Minh đã hàn kín vết nứt kịp thời!', 'good');
+          } else {
+            state.resources.water = Math.max(0, state.resources.water - 3);
+            addLog('Thiếu vật liệu sửa chữa, bị mất 3 Nước uống.', 'bad');
+          }
+        }
+      },
+      {
+        text: '💧 Đành chấp nhận mất 3 Nước uống',
+        effect: () => {
+          state.resources.water = Math.max(0, state.resources.water - 3);
+          addLog('Bồn nước bị rò rỉ làm hao hụt 3 Nước uống.', 'bad');
+        }
+      }
+    ]
+  },
+  {
+    id: 'supply_cache',
+    title: '🎁 Phát hiện hòm tiếp tế',
+    desc: 'Dưới lớp lá khô có một thùng tiếp tế được niêm phong từ trước biến cố!',
+    choices: [
+      {
+        text: '📦 Mở thùng ngay (+4 Thực phẩm, +3 Nước, +2 Vật liệu)',
+        effect: () => {
+          state.resources.food += 4;
+          state.resources.water += 3;
+          state.resources.mats += 2;
+          addLog('Tìm thấy kho tiếp tế bất ngờ! Tài nguyên tăng mạnh.', 'good');
+        }
+      }
+    ]
+  },
+  {
+    id: 'member_fatigue',
+    title: '😓 Thành viên bị mệt',
+    desc: 'Thời tiết thay đổi thất thường khiến Minh cảm thấy hơi kiệt sức.',
+    choices: [
+      {
+        text: '💊 Cho Minh dùng 1 Thuốc (+25 Máu, +10 Tâm trạng)',
+        effect: () => {
+          if (state.resources.meds >= 1) {
+            state.resources.meds -= 1;
+            state.characters.minh.hp = Math.min(100, state.characters.minh.hp + 25);
+            state.characters.minh.mood = Math.min(100, state.characters.minh.mood + 10);
+            addLog('Dùng thuốc kịp thời giúp Minh hồi phục sức khỏe.', 'good');
+          } else {
+            state.characters.minh.hp = Math.max(10, state.characters.minh.hp - 12);
+            addLog('Không có thuốc, Minh đành nghỉ tạm (-12 Máu).', 'warn');
+          }
+        }
+      },
+      {
+        text: '🛌 Cho Minh nghỉ ngơi hoàn toàn hôm nay',
+        effect: () => {
+          state.characters.minh.assigned = 'rest';
+          state.characters.minh.mood = Math.min(100, state.characters.minh.mood + 8);
+          addLog('Bạn cho Minh nghỉ ngơi để lấy lại sức.', 'good');
+        }
+      }
+    ]
+  }
+];
+
+function triggerRandomEvent() {
+  const ev = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+  const choicesHtml = ev.choices.map((ch, idx) => `
+    <button class="choice-btn" onclick="resolveEventChoice('${ev.id}', ${idx})">${ch.text}</button>
+  `).join('');
+
+  openModal(ev.title, `
+    <div class="dialogue-bubble">${ev.desc}</div>
+    <div class="choice-list">${choicesHtml}</div>
+  `);
+}
+
+function resolveEventChoice(evId, choiceIdx) {
+  const ev = RANDOM_EVENTS.find(e => e.id === evId);
+  if (ev && ev.choices[choiceIdx]) {
+    ev.choices[choiceIdx].effect();
+  }
+  AudioFX.play(540, 'sine', 0.12);
+  closeModal();
+  updateAllUI();
+  autoSave();
+}
+
+/* ==========================================================================
+   13. TURN & END OF DAY SURVIVAL CALCULATIONS
+   ========================================================================== */
+function consumeAP(amount, actionName) {
+  if (state.ap < amount) {
+    showToast('⚡ Hết lượt hành động! Hãy nhấn "Qua ngày".');
+    return false;
+  }
+  state.ap -= amount;
+  updateAllUI();
+  return true;
+}
+
+function endDay() {
+  // Always return to base at night
+  state.currentLocation = 'base';
+  state.playerX = 280;
+  cameraX = 0;
+
+  let summaryLines = [];
+
+  // 1. Process Character Assignments
+  Object.values(state.characters).forEach(c => {
+    c.talkedToday = false;
+    if (c.assigned === 'forage') {
+      state.resources.food += 2;
+      state.resources.water += 2;
+      c.mood = Math.max(0, c.mood - 5);
+      summaryLines.push(`• ${c.name} tìm về +2 Thực phẩm, +2 Nước.`);
+    } else if (c.assigned === 'gather') {
+      state.resources.wood += 3;
+      state.resources.mats += 2;
+      c.mood = Math.max(0, c.mood - 5);
+      summaryLines.push(`• ${c.name} gom về +3 Gỗ, +2 Vật liệu.`);
+    } else if (c.assigned === 'farm') {
+      state.resources.seeds += 2;
+      if (state.buildings.garden.state === 'growing') {
+        state.buildings.garden.state = 'ready';
+      }
+      summaryLines.push(`• ${c.name} chăm vườn và tìm được +2 Hạt giống.`);
+    } else if (c.assigned === 'rest') {
+      c.hp = Math.min(100, c.hp + 20);
+      c.mood = Math.min(100, c.mood + 15);
+      summaryLines.push(`• ${c.name} nghỉ ngơi (+20 Máu, +15 Tâm trạng).`);
+    }
+    c.assigned = 'none';
+  });
+
+  // 2. Daily Consumption (4 members including player: 3 Food, 3 Water per day)
+  const foodNeed = 3;
+  const waterNeed = 3;
+
+  if (state.resources.food >= foodNeed) {
+    state.resources.food -= foodNeed;
+    summaryLines.push(`• Cả nhóm dùng bữa tối (-${foodNeed} Thực phẩm).`);
+  } else {
+    const deficit = foodNeed - state.resources.food;
+    state.resources.food = 0;
+    Object.values(state.characters).forEach(c => {
+      c.hp = Math.max(5, c.hp - deficit * 8);
+      c.mood = Math.max(0, c.mood - 10);
+    });
+    summaryLines.push(`⚠️ Thiếu thực phẩm! Sức khỏe mọi người giảm sút.`);
+  }
+
+  if (state.resources.water >= waterNeed) {
+    state.resources.water -= waterNeed;
+    summaryLines.push(`• Cả nhóm bổ sung nước uống (-${waterNeed} Nước).`);
+  } else {
+    const deficit = waterNeed - state.resources.water;
+    state.resources.water = 0;
+    Object.values(state.characters).forEach(c => {
+      c.hp = Math.max(5, c.hp - deficit * 10);
+      c.mood = Math.max(0, c.mood - 12);
+    });
+    summaryLines.push(`⚠️ Thiếu nước uống trầm trọng! Sức khỏe giảm mạnh.`);
+  }
+
+  // 3. Garden Growth
+  if (state.buildings.garden.state === 'growing') {
+    state.buildings.garden.state = 'ready';
+    summaryLines.push(`🌱 Rau ngoài vườn đã chín, sẵn sàng thu hoạch!`);
+  }
+
+  // 4. Advance Day, Reset AP & Locations
+  state.day += 1;
+  state.ap = state.maxAp;
+  const weathers = ['sunny', 'sunny', 'cloudy', 'rain'];
+  state.weather = weathers[Math.floor(Math.random() * weathers.length)];
+  if (state.weather === 'rain') {
+    state.resources.water += 2;
+    summaryLines.push(`🌧️ Trời mưa nhẹ ban đêm giúp tăng +2 Nước dự trữ.`);
+  }
+
+  Object.values(state.locations).forEach(l => l.lootedToday = false);
+  spawnLocationLoot('base');
+
+  addLog(`Kết thúc Ngày ${state.day - 1}. Bắt đầu Ngày ${state.day}.`, 'warn');
+  updateAllUI();
+  autoSave();
+
+  openModal(`🌅 Bình minh Ngày ${state.day}`, `
+    <div class="dialogue-bubble">
+      <b>Tổng kết đêm qua:</b><br>
+      ${summaryLines.join('<br>')}
+    </div>
+    <button class="btn" onclick="closeModal(); maybeMorningEvent();">Bắt đầu ngày mới</button>
+  `);
+}
+
+function maybeMorningEvent() {
+  if (Math.random() < 0.65) {
+    triggerRandomEvent();
+  }
+}
+
+/* ==========================================================================
+   14. INVENTORY USE & UI RENDERING
+   ========================================================================== */
+function useInventoryItem(idx) {
+  const item = state.inventory[idx];
+  if (!item || item.qty <= 0) return;
+
+  if (item.id === 'canned_beans') {
+    state.resources.food += 4;
+    showToast('🥫 Đã mở Đậu hộp (+4 Thực phẩm)');
+  } else if (item.id === 'clean_bottle') {
+    state.resources.water += 4;
+    showToast('🧴 Đã dùng Bình nước (+4 Nước uống)');
+  } else if (item.id === 'bandage') {
+    // Heal lowest HP member
+    const lowest = Object.values(state.characters).sort((a, b) => a.hp - b.hp)[0];
+    lowest.hp = Math.min(100, lowest.hp + 25);
+    showToast(`🩹 Đã băng bó cho ${lowest.name} (+25 Máu)`);
+  }
+
+  item.qty -= 1;
+  if (item.qty <= 0) {
+    state.inventory.splice(idx, 1);
+  }
+  updateAllUI();
+  autoSave();
+}
+
+function updateAllUI() {
+  // Top Badges
+  document.getElementById('ui-day').textContent = state.day;
+  const wMap = { sunny: '☀️ Nắng nhẹ', cloudy: '⛅ Nhiều mây', rain: '🌧️ Trời mưa' };
+  document.getElementById('ui-weather').textContent = wMap[state.weather] || '☀️ Nắng nhẹ';
+  document.getElementById('ui-ap-text').textContent = `${state.ap}/${state.maxAp}`;
+
+  const dotsEl = document.getElementById('ui-ap-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < state.maxAp; i++) {
+    const d = document.createElement('span');
+    d.className = 'ap-dot' + (i < state.ap ? ' active' : '');
+    dotsEl.appendChild(d);
+  }
+
+  // Resources
+  document.getElementById('res-food').textContent = state.resources.food;
+  document.getElementById('res-water').textContent = state.resources.water;
+  document.getElementById('res-meds').textContent = state.resources.meds;
+  document.getElementById('res-wood').textContent = state.resources.wood;
+  document.getElementById('res-seeds').textContent = state.resources.seeds;
+  document.getElementById('res-mats').textContent = state.resources.mats;
+
+  // Location Banner
+  const loc = state.locations[state.currentLocation];
+  document.getElementById('ui-loc-name').textContent = `📍 ${loc.name}`;
+  document.getElementById('ui-loc-desc').textContent = loc.desc;
+
+  // Tab 1: Characters
+  const charList = document.getElementById('char-list');
+  charList.innerHTML = Object.values(state.characters).map(c => `
+    <div class="char-card">
+      <div class="char-header">
+        <div>
+          <span class="char-name">${c.name}</span>
+          <span class="char-role">${c.role}</span>
+        </div>
+        <button class="btn btn-sm" onclick="focusCharacter('${c.id}')">💬 Gặp mặt</button>
+      </div>
+      <div class="stat-row">
+        <span style="width:65px;">❤️ Sức khỏe</span>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${c.hp}%; background:#10b981;"></div></div>
+        <span>${c.hp}%</span>
+      </div>
+      <div class="stat-row">
+        <span style="width:65px;">😊 Tâm trạng</span>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${c.mood}%; background:#3b82f6;"></div></div>
+        <span>${c.mood}%</span>
+      </div>
+      <div class="stat-row">
+        <span style="width:65px;">🤝 Quan hệ</span>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${c.rel}%; background:#f59e0b;"></div></div>
+        <span>${c.rel}</span>
+      </div>
+      <div style="font-size:0.75rem; color:#9ca3af;">Việc hôm nay: <b>${getAssignLabel(c.assigned)}</b></div>
+    </div>
+  `).join('');
+
+  // Tab 2: Map
+  const mapList = document.getElementById('map-list');
+  mapList.innerHTML = Object.values(state.locations).filter(l => l.unlocked).map(l => {
+    const isCur = l.id === state.currentLocation;
+    return `
+      <div class="map-card ${isCur ? 'current' : ''}">
+        <div>
+          <div style="font-weight:700; color:${isCur ? '#10b981' : '#fbbf24'};">
+            ${l.name} ${isCur ? '(Đang ở đây)' : ''}
+          </div>
+          <div style="font-size:0.78rem; color:#d1d5db; margin-top:4px;">${l.desc}</div>
+        </div>
+        <button class="btn btn-sm ${isCur ? 'btn-secondary' : ''}" ${isCur ? 'disabled' : ''} onclick="travelToLocation('${l.id}')">
+          ${isCur ? 'Đang có mặt' : (l.id === 'base' ? '🏡 Về Căn cứ (0 Lượt)' : '🚶 Khám phá (1 Lượt)')}
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Tab 3: Quests
+  const questList = document.getElementById('quest-list');
+  questList.innerHTML = Object.values(state.characters).map(c => `
+    <div class="char-card" style="flex-direction:row; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-weight:700; color:#fbbf24;">[${c.name}] ${c.questTitle}</div>
+        <div style="font-size:0.8rem; color:#d1d5db;">${c.questDesc}</div>
+      </div>
+      <span class="badge" style="color:${c.questDone ? '#10b981' : '#f59e0b'};">
+        ${c.questDone ? '✅ Xong' : '⏳ Chưa xong'}
+      </span>
+    </div>
+  `).join('');
+
+  // Tab 4: Bag
+  const bagList = document.getElementById('bag-list');
+  if (state.inventory.length === 0) {
+    bagList.innerHTML = `<div style="color:#9ca3af; font-size:0.85rem;">Túi đồ đặc biệt đang trống.</div>`;
+  } else {
+    bagList.innerHTML = state.inventory.map((it, idx) => `
+      <div class="char-card">
+        <div style="font-weight:700;">${it.icon} ${it.name} (x${it.qty})</div>
+        <div style="font-size:0.78rem; color:#9ca3af;">${it.desc}</div>
+        <button class="btn btn-sm btn-green" onclick="useInventoryItem(${idx})">Sử dụng</button>
+      </div>
+    `).join('');
+  }
+
+  // Tab 5: Logs
+  const logList = document.getElementById('log-list');
+  logList.innerHTML = state.logs.slice().reverse().map(lg => `
+    <div class="log-entry ${lg.type || ''}">
+      <b>[Ngày ${lg.day}]</b> ${lg.text}
+    </div>
+  `).join('');
+}
+
+function focusCharacter(charId) {
+  if (state.currentLocation !== 'base') {
+    showToast('🏡 Hãy quay về Căn cứ Bình Minh để gặp thành viên!');
+    return;
+  }
+  const c = state.characters[charId];
+  state.playerX = c.x - 40;
+  openCharacterDialogue(charId);
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tabId);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-' + tabId);
+  });
+}
+
+function openModal(title, bodyHtml) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function openSystemMenu() {
+  openModal('⚙️ Tùy chọn hệ thống', `
+    <div class="choice-list">
+      <button class="btn btn-green" onclick="manualSave(); closeModal();">💾 Lưu tiến trình thủ công</button>
+      <button class="btn btn-blue" onclick="closeModal(); triggerRandomEvent();">🎲 Kích hoạt sự kiện ngẫu nhiên (Thử nghiệm)</button>
+      <button class="btn btn-red" onclick="resetGameConfirm()">🔄 Chơi lại từ đầu</button>
+    </div>
+  `);
+}
+
+function addLog(text, type = '') {
+  state.logs.push({ day: state.day, text, type });
+  if (state.logs.length > 40) state.logs.shift();
+}
+
+function getResName(key) {
+  const names = {
+    food: 'Thực phẩm',
+    water: 'Nước uống',
+    meds: 'Thuốc',
+    wood: 'Gỗ',
+    seeds: 'Hạt giống',
+    mats: 'Vật liệu'
+  };
+  return names[key] || key;
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 2400);
+}
+
+// Initialize Start Screen Check
+checkSaveExists();
+</script>
+</body>
+</html>
